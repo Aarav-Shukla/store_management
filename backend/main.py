@@ -1,6 +1,6 @@
 from jose import jwt
 from datetime import datetime, timedelta
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, HTTPException, Header
 from pydantic import BaseModel
 from database import connect_db, close_db, get_pool
 import os
@@ -24,6 +24,14 @@ def create_access_token(data: dict):
     encoded_jwt = jwt.encode(to_encode, JWT_SECRET, algorithm="HS256")
     return encoded_jwt
 
+def get_current_user(authorization: str = Header(...)):
+    try:
+        token = authorization.replace("Bearer ", "")
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+        return payload
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid or missing token")
+    
 app = FastAPI()
 
 @app.on_event("startup")
@@ -75,3 +83,7 @@ async def login(data: LoginRequest):
             return {"error": "Invalid credentials"}
         token  = create_access_token({"username": data.username, "role": user["role"]})
         return {"access_token": token, "token_type": "bearer"}
+    
+@app.get("/me")
+async def get_me(current_user: dict = Depends(get_current_user)):
+    return {"message": "authenticated", "user": current_user}
