@@ -1,13 +1,28 @@
+from jose import jwt
+from datetime import datetime, timedelta
 from fastapi import FastAPI
 from pydantic import BaseModel
 from database import connect_db, close_db, get_pool
+import os
+import bcrypt
+JWT_SECRET = os.getenv("JWT_SECRET")
 
 class ProductCreate(BaseModel):
     barcode: str
     name: str
     price: float
     quantity_on_hand: int = 0
-
+    
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+    
+def create_access_token(data: dict):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(hours=8)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, JWT_SECRET, algorithm="HS256")
+    return encoded_jwt
 
 app = FastAPI()
 
@@ -48,3 +63,15 @@ async def get_product_by_barcode(barcode: str):
         if row is None:
             return None
     return row
+
+@app.post("/auth/login")
+async def login(data: LoginRequest):
+    pool = get_pool()
+    async with pool.acquire() as connection:
+        user = await connection.fetchrow("SELECT * FROM users WHERE username = $1", data.username)
+        if user is None:
+            return {"error": "No User Found"}
+        if not bcrypt.checkpw(data.password.encode(), user["password_hash"].encode()):
+            return {"error": "Invalid credentials"}
+        token  = create_access_token({"username": data.username, "role": user["role"]})
+        return {"access_token": token, "token_type": "bearer"}
