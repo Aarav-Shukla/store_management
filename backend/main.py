@@ -34,8 +34,17 @@ async def create_product(data: ProductCreate):
     return {"message": "Product created successfully"}
 
 @app.get("/products")
-async def read_products():
+async def view_products():
     pool = get_pool();
     async with pool.acquire() as connection:
         rows = await connection.fetch("SELECT * FROM products")
     return rows
+
+@app.get("/products/{barcode}")
+async def get_product_by_barcode(barcode: str):
+    pool = get_pool();
+    async with pool.acquire() as connection:
+        row = await connection.fetchrow("SELECT * FROM products WHERE barcode = $1", barcode)
+        if row is None:
+            return None
+    return row
