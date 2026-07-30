@@ -32,3 +32,10 @@ async def create_product(data: ProductCreate):
             data.barcode, data.name, data.price, data.quantity_on_hand
         )
     return {"message": "Product created successfully"}
+
+@app.get("/products")
+async def read_products():
+    pool = get_pool();
+    async with pool.acquire() as connection:
+        rows = await connection.fetch("SELECT * FROM products")
+    return rows
