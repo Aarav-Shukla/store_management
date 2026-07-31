@@ -25,6 +25,9 @@ class CartItem(BaseModel):
 class CheckoutRequest(BaseModel):
     items: list[CartItem]
     
+class RestockRequest(BaseModel):
+    amount: int
+    
 def create_access_token(data: dict):
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(hours=8)
@@ -124,3 +127,31 @@ async def checkout(data: CheckoutRequest, current_user: dict = Depends(get_curre
                     "INSERT INTO transaction_items (transaction_id, product_id, quantity, price_at_sale) VALUES ($1, $2, $3, $4)",
                     transaction_id, item.product_id, item.quantity, prices[item.product_id]
                 )
+                await connection.execute(
+                    "INSERT INTO inventory_log (product_id, change_amount, reason) VALUES ($1, $2, $3)",
+                    item.product_id, -item.quantity, 'sale'
+                )
+            return {"message": "Checkout successful", "transaction_id": transaction_id, "total": total}
+        
+@app.get("/products/low-stock")
+async def low_stock():
+    pool = get_pool()
+    async with pool.acquire() as connection:
+        rows = await connection.fetch("SELECT * FROM products WHERE quantity_on_hand < reorder_threshold")
+    return rows
+
+@app.post("/products/{id}/restock")
+async def restock_product(id: int, data: RestockRequest, current_user: dict = Depends(get_current_user)):
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Access Denied")
+    pool = get_pool()
+    async with pool.acquire() as connection:
+        await connection.execute(
+            "UPDATE products SET quantity_on_hand = quantity_on_hand + $1 WHERE id = $2",
+            data.amount, id
+        )
+        await connection.execute(
+            "INSERT INTO inventory_log (product_id, change_amount, reason) VALUES ($1, $2, $3)",
+            id, data.amount, 'restock'
+        )
+    return {"message": "Restock successful", "product_id": id, "amount_added": data.amount}
