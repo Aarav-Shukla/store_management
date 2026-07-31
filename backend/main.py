@@ -102,7 +102,7 @@ async def login(data: LoginRequest):
         if not bcrypt.checkpw(data.password.encode(), user["password_hash"].encode()):
             return {"error": "Invalid credentials"}
         token  = create_access_token({"username": data.username, "role": user["role"], "id": user["id"]})
-        return {"access_token": token, "token_type": "bearer"}
+        return {"access_token": token, "token_type": "bearer", "role": user["role"]}
     
 @app.get("/me")
 async def get_me(current_user: dict = Depends(get_current_user)):

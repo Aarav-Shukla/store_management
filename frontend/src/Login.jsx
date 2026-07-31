@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-function Login() {
+function Login({ onLoginSuccess }) {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
 
@@ -11,7 +11,7 @@ function Login() {
             body: JSON.stringify({ username: username, password: password })
         });
         const data = await response.json();
-        console.log(data);
+        onLoginSuccess(data.access_token, data.role)
     }
 
     return (
