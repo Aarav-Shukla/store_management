@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from fastapi import FastAPI, Depends, HTTPException, Header
 from pydantic import BaseModel
 from database import connect_db, close_db, get_pool
+from typing import List
 import os
 import bcrypt
 JWT_SECRET = os.getenv("JWT_SECRET")
@@ -16,6 +17,13 @@ class ProductCreate(BaseModel):
 class LoginRequest(BaseModel):
     username: str
     password: str
+    
+class CartItem(BaseModel):
+    product_id: int
+    quantity: int
+    
+class CheckoutRequest(BaseModel):
+    items: list[CartItem]
     
 def create_access_token(data: dict):
     to_encode = data.copy()
@@ -81,9 +89,38 @@ async def login(data: LoginRequest):
             return {"error": "No User Found"}
         if not bcrypt.checkpw(data.password.encode(), user["password_hash"].encode()):
             return {"error": "Invalid credentials"}
-        token  = create_access_token({"username": data.username, "role": user["role"]})
+        token  = create_access_token({"username": data.username, "role": user["role"], "id": user["id"]})
         return {"access_token": token, "token_type": "bearer"}
     
 @app.get("/me")
 async def get_me(current_user: dict = Depends(get_current_user)):
     return {"message": "authenticated", "user": current_user}
+
+@app.post("/transactions")
+async def checkout(data: CheckoutRequest, current_user: dict = Depends(get_current_user)):
+    pool = get_pool()
+    async with pool.acquire() as connection:
+        async with connection.transaction():
+            total = 0
+            prices = {}
+            for item in data.items:
+                product = await connection.fetchrow("SELECT * FROM products WHERE id = $1 FOR UPDATE", item.product_id)
+                if product is None:
+                    raise HTTPException(status_code=400, detail=f"Product {item.product_id} not found")
+                if product["quantity_on_hand"] < item.quantity:
+                    raise HTTPException(status_code=400, detail=f"Insufficient stock for product {item.product_id}")
+                total += product["price"] * item.quantity
+                prices[item.product_id] = product["price"]
+                await connection.execute(
+                    "UPDATE products SET quantity_on_hand = quantity_on_hand - $1 WHERE id = $2",
+                    item.quantity, item.product_id
+                )
+            transaction_id = await connection.fetchval(
+                "INSERT INTO transactions (cashier_id, total) VALUES ($1, $2) RETURNING id",
+                current_user["id"], total
+            )
+            for item in data.items:
+                await connection.execute(
+                    "INSERT INTO transaction_items (transaction_id, product_id, quantity, price_at_sale) VALUES ($1, $2, $3, $4)",
+                    transaction_id, item.product_id, item.quantity, prices[item.product_id]
+                )
