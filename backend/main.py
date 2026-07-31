@@ -142,7 +142,7 @@ async def low_stock():
 
 @app.post("/products/{id}/restock")
 async def restock_product(id: int, data: RestockRequest, current_user: dict = Depends(get_current_user)):
-    if current_user["role"] != "admin":
+    if current_user["role"] not in ["manager", "region_manager"]:
         raise HTTPException(status_code=403, detail="Access Denied")
     pool = get_pool()
     async with pool.acquire() as connection:
