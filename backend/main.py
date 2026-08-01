@@ -213,3 +213,10 @@ async def restock_product(id: int, data: RestockRequest, current_user: dict = De
             id, data.amount, 'restock'
         )
     return {"message": "Restock successful", "product_id": id, "amount_added": data.amount}
+
+@app.get("/stores")
+async def get_my_stores(current_user: dict = Depends(get_current_user)):
+    pool = get_pool()
+    async with pool.acquire() as connection:
+        rows = await connection.fetch("SELECT * FROM stores WHERE id = ANY($1)", current_user["store_ids"])
+    return rows

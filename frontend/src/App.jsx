@@ -2,6 +2,7 @@ import { useState } from 'react';
 import EmployeeView from './EmployeeView';
 import Login from './Login';
 import ManagerView from './ManagerView';
+import RegionManagerView from './RegionManagerView';
 
 function App() {
   const [token, setToken] = useState(null);
@@ -28,7 +29,7 @@ function App() {
     return <ManagerView token={token} storeId={storeIds[0]} />;
   }
 
-  return <div>Region Manager view coming soon</div>;
+  return <RegionManagerView token={token} storeIds={storeIds} />;
 }
 
 export default App;
