@@ -7,6 +7,8 @@ from database import connect_db, close_db, get_pool
 from typing import List, Optional
 import os
 import bcrypt
+import math
+
 JWT_SECRET = os.getenv("JWT_SECRET")
 
 class ProductCreate(BaseModel):
@@ -36,6 +38,18 @@ def create_access_token(data: dict):
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, JWT_SECRET, algorithm="HS256")
     return encoded_jwt
+
+def calculate_distance(lat1, lon1, lat2, lon2):
+    R = 3958.8  # Earth's radius in miles
+    lat1_rad = math.radians(lat1)
+    lat2_rad = math.radians(lat2)
+    delta_lat = math.radians(lat2 - lat1)
+    delta_lon = math.radians(lon2 - lon1)
+
+    a = math.sin(delta_lat / 2) ** 2 + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(delta_lon / 2) ** 2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+    return R * c
 
 def get_current_user(authorization: str = Header(...)):
     try:
@@ -89,25 +103,85 @@ async def login(data: LoginRequest):
             "username": data.username,
             "role": user["role"],
             "id": user["id"],
-            "store_ids": store_ids
+            "store_ids": store_ids,
+            "name": user["name"]
         })
-        return {"access_token": token, "token_type": "bearer", "role": user["role"], "store_ids": store_ids}
+        return {"access_token": token, "token_type": "bearer", "role": user["role"], "store_ids": store_ids, "name": user["name"]}
 
 @app.get("/me")
 async def get_me(current_user: dict = Depends(get_current_user)):
     return {"message": "authenticated", "user": current_user}
 
-@app.post("/products")
-async def create_product(data: ProductCreate, current_user: dict = Depends(get_current_user)):
-    if data.store_id not in current_user["store_ids"]:
+@app.get("/stores")
+async def get_my_stores(current_user: dict = Depends(get_current_user)):
+    pool = get_pool()
+    async with pool.acquire() as connection:
+        rows = await connection.fetch("SELECT * FROM stores WHERE id = ANY($1)", current_user["store_ids"])
+    return rows
+
+# ==========================================
+# PRODUCT ROUTES (Specific paths first)
+# ==========================================
+
+@app.get("/products/low-stock")
+async def low_stock(store_id: Optional[int] = Query(None), current_user: dict = Depends(get_current_user)):
+    if store_id is None:
+        if len(current_user["store_ids"]) == 1:
+            store_id = current_user["store_ids"][0]
+        else:
+            raise HTTPException(status_code=400, detail="store_id is required for users with access to multiple stores")
+    if store_id not in current_user["store_ids"]:
         raise HTTPException(status_code=403, detail="You do not have access to this store")
     pool = get_pool()
     async with pool.acquire() as connection:
-        await connection.execute(
-            "INSERT INTO products (store_id, barcode, name, price, quantity_on_hand) VALUES ($1, $2, $3, $4, $5)",
-            data.store_id, data.barcode, data.name, data.price, data.quantity_on_hand
+        rows = await connection.fetch(
+            "SELECT * FROM products WHERE store_id = $1 AND quantity_on_hand < reorder_threshold", store_id
         )
-    return {"message": "Product created successfully"}
+    return rows
+
+@app.get("/products/availability/{barcode}")
+async def check_availability(barcode: str, store_id: int, current_user: dict = Depends(get_current_user)):
+    if store_id not in current_user["store_ids"]:
+        raise HTTPException(status_code=403, detail="You do not have access to this store")
+
+    pool = get_pool()
+    async with pool.acquire() as connection:
+        origin_store = await connection.fetchrow("SELECT * FROM stores WHERE id = $1", store_id)
+        if origin_store is None:
+            raise HTTPException(status_code=404, detail="Store not found")
+
+        origin_product = await connection.fetchrow(
+            "SELECT * FROM products WHERE barcode = $1 AND store_id = $2", barcode, store_id
+        )
+        if origin_product is None:
+            raise HTTPException(status_code=404, detail="Product not found at your store")
+
+        rows = await connection.fetch(
+            """
+            SELECT products.quantity_on_hand, stores.id AS store_id, stores.name AS store_name, stores.latitude, stores.longitude
+            FROM products
+            JOIN stores ON products.store_id = stores.id
+            WHERE products.sku = $1 AND products.store_id != $2 AND products.quantity_on_hand > 0
+            """,
+            origin_product["sku"], store_id
+        )
+
+        results = []
+        for row in rows:
+            distance = calculate_distance(
+                origin_store["latitude"], origin_store["longitude"],
+                row["latitude"], row["longitude"]
+            )
+            results.append({
+                "store_id": row["store_id"],
+                "store_name": row["store_name"],
+                "quantity_on_hand": row["quantity_on_hand"],
+                "distance_miles": round(distance, 1)
+            })
+
+        results.sort(key=lambda r: r["distance_miles"])
+
+    return {"product_name": origin_product["name"], "availability": results}
 
 @app.get("/products")
 async def view_products(store_id: Optional[int] = Query(None), current_user: dict = Depends(get_current_user)):
@@ -123,6 +197,18 @@ async def view_products(store_id: Optional[int] = Query(None), current_user: dic
         rows = await connection.fetch("SELECT * FROM products WHERE store_id = $1", store_id)
     return rows
 
+@app.post("/products")
+async def create_product(data: ProductCreate, current_user: dict = Depends(get_current_user)):
+    if data.store_id not in current_user["store_ids"]:
+        raise HTTPException(status_code=403, detail="You do not have access to this store")
+    pool = get_pool()
+    async with pool.acquire() as connection:
+        await connection.execute(
+            "INSERT INTO products (store_id, barcode, name, price, quantity_on_hand) VALUES ($1, $2, $3, $4, $5)",
+            data.store_id, data.barcode, data.name, data.price, data.quantity_on_hand
+        )
+    return {"message": "Product created successfully"}
+
 @app.get("/products/{store_id}/{barcode}")
 async def get_product_by_barcode(store_id: int, barcode: str, current_user: dict = Depends(get_current_user)):
     if store_id not in current_user["store_ids"]:
@@ -135,6 +221,31 @@ async def get_product_by_barcode(store_id: int, barcode: str, current_user: dict
         if row is None:
             return None
     return row
+
+@app.post("/products/{id}/restock")
+async def restock_product(id: int, data: RestockRequest, current_user: dict = Depends(get_current_user)):
+    if current_user["role"] not in ["manager", "region_manager"]:
+        raise HTTPException(status_code=403, detail="Access Denied")
+    pool = get_pool()
+    async with pool.acquire() as connection:
+        product = await connection.fetchrow("SELECT * FROM products WHERE id = $1", id)
+        if product is None:
+            raise HTTPException(status_code=404, detail="Product not found")
+        if product["store_id"] not in current_user["store_ids"]:
+            raise HTTPException(status_code=403, detail="You do not have access to this store")
+        await connection.execute(
+            "UPDATE products SET quantity_on_hand = quantity_on_hand + $1 WHERE id = $2",
+            data.amount, id
+        )
+        await connection.execute(
+            "INSERT INTO inventory_log (product_id, change_amount, reason) VALUES ($1, $2, $3)",
+            id, data.amount, 'restock'
+        )
+    return {"message": "Restock successful", "product_id": id, "amount_added": data.amount}
+
+# ==========================================
+# TRANSACTION ROUTES
+# ==========================================
 
 @app.post("/transactions")
 async def checkout(data: CheckoutRequest, current_user: dict = Depends(get_current_user)):
@@ -176,47 +287,3 @@ async def checkout(data: CheckoutRequest, current_user: dict = Depends(get_curre
                     item.product_id, -item.quantity, 'sale'
                 )
             return {"message": "Checkout successful", "transaction_id": transaction_id, "total": total}
-
-@app.get("/products/low-stock")
-async def low_stock(store_id: Optional[int] = Query(None), current_user: dict = Depends(get_current_user)):
-    if store_id is None:
-        if len(current_user["store_ids"]) == 1:
-            store_id = current_user["store_ids"][0]
-        else:
-            raise HTTPException(status_code=400, detail="store_id is required for users with access to multiple stores")
-    if store_id not in current_user["store_ids"]:
-        raise HTTPException(status_code=403, detail="You do not have access to this store")
-    pool = get_pool()
-    async with pool.acquire() as connection:
-        rows = await connection.fetch(
-            "SELECT * FROM products WHERE store_id = $1 AND quantity_on_hand < reorder_threshold", store_id
-        )
-    return rows
-
-@app.post("/products/{id}/restock")
-async def restock_product(id: int, data: RestockRequest, current_user: dict = Depends(get_current_user)):
-    if current_user["role"] not in ["manager", "region_manager"]:
-        raise HTTPException(status_code=403, detail="Access Denied")
-    pool = get_pool()
-    async with pool.acquire() as connection:
-        product = await connection.fetchrow("SELECT * FROM products WHERE id = $1", id)
-        if product is None:
-            raise HTTPException(status_code=404, detail="Product not found")
-        if product["store_id"] not in current_user["store_ids"]:
-            raise HTTPException(status_code=403, detail="You do not have access to this store")
-        await connection.execute(
-            "UPDATE products SET quantity_on_hand = quantity_on_hand + $1 WHERE id = $2",
-            data.amount, id
-        )
-        await connection.execute(
-            "INSERT INTO inventory_log (product_id, change_amount, reason) VALUES ($1, $2, $3)",
-            id, data.amount, 'restock'
-        )
-    return {"message": "Restock successful", "product_id": id, "amount_added": data.amount}
-
-@app.get("/stores")
-async def get_my_stores(current_user: dict = Depends(get_current_user)):
-    pool = get_pool()
-    async with pool.acquire() as connection:
-        rows = await connection.fetch("SELECT * FROM stores WHERE id = ANY($1)", current_user["store_ids"])
-    return rows

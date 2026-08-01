@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-function EmployeeView({ token, storeId, onLogout, darkMode, setDarkMode }) {
+function EmployeeView({ token, storeId, onLogout, darkMode, setDarkMode, name }) {
     const [barcode, setBarcode] = useState('');
     const [cart, setCart] = useState([]);
     const [message, setMessage] = useState('');
@@ -55,7 +55,7 @@ function EmployeeView({ token, storeId, onLogout, darkMode, setDarkMode }) {
         <div className="page-content">
             <div className="card">
                 <div className="card-header">
-                    <h2>Employee Checkout</h2>
+                    <h2>Welcome, {name}</h2>
                     <div className="header-controls">
                         <label className="theme-toggle">
                             <input

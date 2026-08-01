@@ -11,7 +11,7 @@ function Login({ onLoginSuccess }) {
             body: JSON.stringify({ username: username, password: password })
         });
         const data = await response.json();
-        onLoginSuccess(data.access_token, data.role, data.store_ids)
+        onLoginSuccess(data.access_token, data.role, data.store_ids, data.name)
     }
 
     return (

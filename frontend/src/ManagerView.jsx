@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-function ManagerView({ token, storeId, onLogout, darkMode, setDarkMode, onBack }) {
+function ManagerView({ token, storeId, onLogout, darkMode, setDarkMode, onBack, name }) {
     const [products, setProducts] = useState([]);
     const [restockAmounts, setRestockAmounts] = useState({});
 
@@ -32,7 +32,7 @@ function ManagerView({ token, storeId, onLogout, darkMode, setDarkMode, onBack }
         <div className="page-content">
             <div className="card">
                 <div className="card-header">
-                    <h2>Manager Dashboard</h2>
+                    <h2>Welcome, {name}</h2>
                     <div className="header-controls">
                         {onBack && <button onClick={onBack}>← Back</button>}
                         <label className="theme-toggle">

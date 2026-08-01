@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import ManagerView from './ManagerView';
 
-function RegionManagerView({ token, storeIds, onLogout, darkMode, setDarkMode }) {
+function RegionManagerView({ token, storeIds, onLogout, darkMode, setDarkMode, name }) {
     const [stores, setStores] = useState([]);
     const [selectedStoreId, setSelectedStoreId] = useState(null);
 
@@ -26,6 +26,7 @@ function RegionManagerView({ token, storeIds, onLogout, darkMode, setDarkMode })
                     darkMode={darkMode}
                     setDarkMode={setDarkMode}
                     onBack={() => setSelectedStoreId(null)}
+                    name={name}
                 />
             </div>
         );
@@ -35,7 +36,7 @@ function RegionManagerView({ token, storeIds, onLogout, darkMode, setDarkMode })
         <div className="page-content">
             <div className="card">
                 <div className="card-header">
-                    <h2>Region Manager Dashboard</h2>
+                    <h2>Welcome, {name}</h2>
                     <div className="header-controls">
                         <label className="theme-toggle">
                             <input
