@@ -26,23 +26,15 @@ function App() {
       setStoreIds(storeIds);
     }} />;
   } else if (role === 'employee') {
-    content = <EmployeeView token={token} storeId={storeIds[0]} onLogout={handleLogout} />;
+    content = <EmployeeView token={token} storeId={storeIds[0]} onLogout={handleLogout} darkMode={darkMode} setDarkMode={setDarkMode} />;
   } else if (role === 'manager') {
-    content = <ManagerView token={token} storeId={storeIds[0]} onLogout={handleLogout} />;
+    content = <ManagerView token={token} storeId={storeIds[0]} onLogout={handleLogout} darkMode={darkMode} setDarkMode={setDarkMode} />;
   } else {
-    content = <RegionManagerView token={token} storeIds={storeIds} onLogout={handleLogout} />;
+    content = <RegionManagerView token={token} storeIds={storeIds} onLogout={handleLogout} darkMode={darkMode} setDarkMode={setDarkMode} />;
   }
 
   return (
     <div className={`app-wrapper ${darkMode ? 'dark' : ''}`}>
-      <label className="theme-toggle">
-        <input
-          type="checkbox"
-          checked={darkMode}
-          onChange={() => setDarkMode(!darkMode)}
-        />
-        <span className="slider"></span>
-      </label>
       {content}
     </div>
   );

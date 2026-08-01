@@ -15,15 +15,19 @@ function Login({ onLoginSuccess }) {
     }
 
     return (
-        <>
-            <h2>Login</h2>
-            <input placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
-            <input
-                placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} 
-                onKeyDown={(e) => { if (e.key === 'Enter') { handleLogin(); } }}
-            />
-            <button onClick={handleLogin}>Log In</button>
-        </>
+        <div className="page-content">
+            <div className="card">
+                <h2>Login</h2>
+                <div className="form-stack">
+                    <input placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
+                    <input
+                        placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { handleLogin(); } }}
+                    />
+                    <button className="btn-primary" onClick={handleLogin}>Log In</button>
+                </div>
+            </div>
+        </div>
     );
 }
 

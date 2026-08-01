@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-function EmployeeView({ token, storeId, onLogout }) {
+function EmployeeView({ token, storeId, onLogout, darkMode, setDarkMode }) {
     const [barcode, setBarcode] = useState('');
     const [cart, setCart] = useState([]);
     const [message, setMessage] = useState('');
@@ -11,7 +11,7 @@ function EmployeeView({ token, storeId, onLogout }) {
             headers: { 'authorization': `Bearer ${token}` }
         });
         const product = await response.json();
-        
+
         if (!product || !product.id) {
             setMessage('Product not found');
             setBarcode('');
@@ -52,22 +52,36 @@ function EmployeeView({ token, storeId, onLogout }) {
     }
 
     return (
-        <div>
-            <h2>Employee Checkout</h2>
-            <button onClick={onLogout}>Log Out</button>
-            <input
-                value={barcode}
-                onChange={(e) => setBarcode(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') { handleScan(); } }}
-            />
-            <button onClick={handleScan}>Scan</button>
-            <ul>
-                {cart.map((item, index) => (
-                    <li key={index}>{item.name} x{item.quantity} - ${item.price}</li>
-                ))}
-            </ul>
-            <button onClick={handleCheckout}>Complete Sale</button>
-            <p>{message}</p>
+        <div className="page-content">
+            <div className="card">
+                <div className="card-header">
+                    <h2>Employee Checkout</h2>
+                    <div className="header-controls">
+                        <label className="theme-toggle">
+                            <input
+                                type="checkbox"
+                                checked={darkMode}
+                                onChange={() => setDarkMode(!darkMode)}
+                            />
+                            <span className="slider"></span>
+                        </label>
+                        <button onClick={onLogout}>Log Out</button>
+                    </div>
+                </div>
+                <input
+                    value={barcode}
+                    onChange={(e) => setBarcode(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { handleScan(); } }}
+                />
+                <button onClick={handleScan}>Scan</button>
+                <ul>
+                    {cart.map((item, index) => (
+                        <li key={index}>{item.name} x{item.quantity} - ${item.price}</li>
+                    ))}
+                </ul>
+                <button className="btn-primary" onClick={handleCheckout}>Complete Sale</button>
+                <p>{message}</p>
+            </div>
         </div>
     );
 }

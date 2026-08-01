@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import ManagerView from './ManagerView';
 
-function RegionManagerView({ token, storeIds, onLogout }) {
+function RegionManagerView({ token, storeIds, onLogout, darkMode, setDarkMode }) {
     const [stores, setStores] = useState([]);
     const [selectedStoreId, setSelectedStoreId] = useState(null);
 
@@ -18,22 +18,42 @@ function RegionManagerView({ token, storeIds, onLogout }) {
 
     if (selectedStoreId) {
         return (
-            <div>
-                <button onClick={() => setSelectedStoreId(null)}>← Back to store list</button>
-                <ManagerView token={token} storeId={selectedStoreId} onLogout={onLogout} />
+            <div className="page-content">
+                <ManagerView
+                    token={token}
+                    storeId={selectedStoreId}
+                    onLogout={onLogout}
+                    darkMode={darkMode}
+                    setDarkMode={setDarkMode}
+                    onBack={() => setSelectedStoreId(null)}
+                />
             </div>
         );
     }
 
     return (
-        <div>
-            <h2>Region Manager Dashboard</h2>
-            <button onClick={onLogout}>Log Out</button>
-            {stores.map((store) => (
-                <button key={store.id} onClick={() => setSelectedStoreId(store.id)}>
-                    {store.name}
-                </button>
-            ))}
+        <div className="page-content">
+            <div className="card">
+                <div className="card-header">
+                    <h2>Region Manager Dashboard</h2>
+                    <div className="header-controls">
+                        <label className="theme-toggle">
+                            <input
+                                type="checkbox"
+                                checked={darkMode}
+                                onChange={() => setDarkMode(!darkMode)}
+                            />
+                            <span className="slider"></span>
+                        </label>
+                        <button onClick={onLogout}>Log Out</button>
+                    </div>
+                </div>
+                {stores.map((store) => (
+                    <button key={store.id} onClick={() => setSelectedStoreId(store.id)}>
+                        {store.name}
+                    </button>
+                ))}
+            </div>
         </div>
     );
 }

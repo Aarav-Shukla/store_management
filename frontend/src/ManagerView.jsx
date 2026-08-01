@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-function ManagerView({ token, storeId, onLogout }) {
+function ManagerView({ token, storeId, onLogout, darkMode, setDarkMode, onBack }) {
     const [products, setProducts] = useState([]);
     const [restockAmounts, setRestockAmounts] = useState({});
 
@@ -29,38 +29,53 @@ function ManagerView({ token, storeId, onLogout }) {
     }
 
     return (
-        <div>
-            <h2>Manager Dashboard</h2>
-            <button onClick={onLogout}>Log Out</button>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Barcode</th>
-                        <th>Price</th>
-                        <th>Stock</th>
-                        <th>Restock</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {products.map((product) => (
-                        <tr key={product.id} style={{ backgroundColor: product.quantity_on_hand < product.reorder_threshold ? '#ffcccc' : 'white' }}>
-                            <td>{product.name}</td>
-                            <td>{product.barcode}</td>
-                            <td>${product.price}</td>
-                            <td>{product.quantity_on_hand}</td>
-                            <td>
-                                <input
-                                    type="number"
-                                    value={restockAmounts[product.id] || ''}
-                                    onChange={(e) => setRestockAmounts({ ...restockAmounts, [product.id]: e.target.value })}
-                                />
-                                <button onClick={() => handleRestock(product.id)}>Restock</button>
-                            </td>
+        <div className="page-content">
+            <div className="card">
+                <div className="card-header">
+                    <h2>Manager Dashboard</h2>
+                    <div className="header-controls">
+                        {onBack && <button onClick={onBack}>← Back</button>}
+                        <label className="theme-toggle">
+                            <input
+                                type="checkbox"
+                                checked={darkMode}
+                                onChange={() => setDarkMode(!darkMode)}
+                            />
+                            <span className="slider"></span>
+                        </label>
+                        <button onClick={onLogout}>Log Out</button>
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Barcode</th>
+                            <th>Price</th>
+                            <th>Stock</th>
+                            <th>Restock</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {products.map((product) => (
+                            <tr key={product.id} style={{ backgroundColor: product.quantity_on_hand < product.reorder_threshold ? 'var(--danger-bg)' : 'transparent' }}>
+                                <td>{product.name}</td>
+                                <td>{product.barcode}</td>
+                                <td>${product.price}</td>
+                                <td>{product.quantity_on_hand}</td>
+                                <td>
+                                    <input
+                                        type="number"
+                                        value={restockAmounts[product.id] || ''}
+                                        onChange={(e) => setRestockAmounts({ ...restockAmounts, [product.id]: e.target.value })}
+                                    />
+                                    <button onClick={() => handleRestock(product.id)}>Restock</button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 }
