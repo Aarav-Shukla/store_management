@@ -15,9 +15,9 @@ function Login({ onLoginSuccess }) {
     }
 
     return (
-        <div className="page-content">
+        <div className="login-content">
             <div className="card">
-                <h2>Login</h2>
+                <h2>Log In</h2>
                 <div className="form-stack">
                     <input placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
                     <input
