@@ -19,6 +19,8 @@ function EmployeeView({ token, storeId, onLogout, darkMode, setDarkMode, name })
             return;
         }
 
+        setMessage('');
+
         const existing = cart.find((item) => item.id === product.id);
 
         if (existing) {
@@ -47,6 +49,8 @@ function EmployeeView({ token, storeId, onLogout, darkMode, setDarkMode, name })
         if (response.ok) {
             setMessage(`Sale Complete. Total: $${data.total}`);
             setCart([]);
+            setAvailability(null);
+            setBarcode('');
         } else {
             setMessage(`Error: ${data.detail}`);
         }
