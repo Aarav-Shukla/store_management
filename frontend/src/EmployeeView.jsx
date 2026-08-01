@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-function EmployeeView({ token, storeId }) {
+function EmployeeView({ token, storeId, onLogout }) {
     const [barcode, setBarcode] = useState('');
     const [cart, setCart] = useState([]);
     const [message, setMessage] = useState('');
@@ -54,6 +54,7 @@ function EmployeeView({ token, storeId }) {
     return (
         <div>
             <h2>Employee Checkout</h2>
+            <button onClick={onLogout}>Log Out</button>
             <input
                 value={barcode}
                 onChange={(e) => setBarcode(e.target.value)}

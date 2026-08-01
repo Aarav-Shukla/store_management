@@ -9,6 +9,12 @@ function App() {
   const [role, setRole] = useState(null);
   const [storeIds, setStoreIds] = useState([]);
 
+  function handleLogout() {
+    setToken(null);
+    setRole(null);
+    setStoreIds([]);
+  }
+
   if (!token) {
     return (
       <div>
@@ -22,14 +28,14 @@ function App() {
   }
 
   if (role === 'employee') {
-    return <EmployeeView token={token} storeId={storeIds[0]} />;
+    return <EmployeeView token={token} storeId={storeIds[0]} onLogout={handleLogout} />;
   }
 
   if (role === 'manager') {
-    return <ManagerView token={token} storeId={storeIds[0]} />;
+    return <ManagerView token={token} storeId={storeIds[0]} onLogout={handleLogout} />;
   }
 
-  return <RegionManagerView token={token} storeIds={storeIds} />;
+  return <RegionManagerView token={token} storeIds={storeIds} onLogout={handleLogout} />;
 }
 
 export default App;

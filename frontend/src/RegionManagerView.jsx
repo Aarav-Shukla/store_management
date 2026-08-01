@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import ManagerView from './ManagerView';
 
-function RegionManagerView({ token, storeIds }) {
+function RegionManagerView({ token, storeIds, onLogout }) {
     const [stores, setStores] = useState([]);
     const [selectedStoreId, setSelectedStoreId] = useState(null);
 
@@ -20,7 +20,7 @@ function RegionManagerView({ token, storeIds }) {
         return (
             <div>
                 <button onClick={() => setSelectedStoreId(null)}>← Back to store list</button>
-                <ManagerView token={token} storeId={selectedStoreId} />
+                <ManagerView token={token} storeId={selectedStoreId} onLogout={onLogout} />
             </div>
         );
     }
@@ -28,6 +28,7 @@ function RegionManagerView({ token, storeIds }) {
     return (
         <div>
             <h2>Region Manager Dashboard</h2>
+            <button onClick={onLogout}>Log Out</button>
             {stores.map((store) => (
                 <button key={store.id} onClick={() => setSelectedStoreId(store.id)}>
                     {store.name}

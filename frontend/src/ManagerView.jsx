@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-function ManagerView({ token, storeId }) {
+function ManagerView({ token, storeId, onLogout }) {
     const [products, setProducts] = useState([]);
 
     useEffect(() => {
@@ -17,6 +17,7 @@ function ManagerView({ token, storeId }) {
     return (
         <div>
             <h2>Manager Dashboard</h2>
+            <button onClick={onLogout}>Log Out</button>
             <table>
                 <thead>
                     <tr>
