@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import EmployeeView from './EmployeeView';
 import Login from './Login';
+import ManagerView from './ManagerView';
 
 function App() {
   const [token, setToken] = useState(null);
@@ -14,12 +15,11 @@ function App() {
     );
   }
 
-  return (
-    <div>
-      <h2>Logged in as: {role}</h2>
-      <EmployeeView token={token} />
-    </div>
-  );
+  if (role === 'employee') {
+    return <EmployeeView token={token} />;
+  }
+
+  return <ManagerView token={token} />;
 }
 
 export default App;
