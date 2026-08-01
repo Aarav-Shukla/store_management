@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import EmployeeView from './EmployeeView';
 import Login from './Login';
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
   return (
     <div>
       <h2>Logged in as: {role}</h2>
+      <EmployeeView token={token} />
     </div>
   );
 }

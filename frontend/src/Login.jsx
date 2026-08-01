@@ -18,7 +18,10 @@ function Login({ onLoginSuccess }) {
         <>
             <h2>Login</h2>
             <input placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
-            <input placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+            <input
+                placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} 
+                onKeyDown={(e) => { if (e.key === 'Enter') { handleLogin(); } }}
+            />
             <button onClick={handleLogin}>Log In</button>
         </>
     );
