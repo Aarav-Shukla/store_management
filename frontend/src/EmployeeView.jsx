@@ -1,21 +1,30 @@
 import { useState } from 'react';
 
-function EmployeeView({ token }) {
+function EmployeeView({ token, storeId }) {
     const [barcode, setBarcode] = useState('');
     const [cart, setCart] = useState([]);
     const [message, setMessage] = useState('');
 
     async function handleScan() {
-        const response = await fetch(`http://127.0.0.1:8000/products/${barcode}`);
+        const url = `http://127.0.0.1:8000/products/${storeId}/${barcode}`;
+        const response = await fetch(url, {
+            headers: { 'authorization': `Bearer ${token}` }
+        });
         const product = await response.json();
+        
+        if (!product || !product.id) {
+            setMessage('Product not found');
+            setBarcode('');
+            return;
+        }
 
         const existing = cart.find((item) => item.id === product.id);
 
         if (existing) {
             setCart(cart.map((item) =>
-            item.id === product.id
-                ? { ...item, quantity: item.quantity + 1 }
-                : item
+                item.id === product.id
+                    ? { ...item, quantity: item.quantity + 1 }
+                    : item
             ));
         } else {
             setCart([...cart, { ...product, quantity: 1 }]);
@@ -26,7 +35,6 @@ function EmployeeView({ token }) {
 
     async function handleCheckout() {
         const items = cart.map((item) => ({ product_id: item.id, quantity: item.quantity }));
-        console.log(items);
         const response = await fetch('http://127.0.0.1:8000/transactions', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'authorization': `Bearer ${token}` },
@@ -54,7 +62,7 @@ function EmployeeView({ token }) {
             <button onClick={handleScan}>Scan</button>
             <ul>
                 {cart.map((item, index) => (
-                    <li key={index}>{item.name} x{item.quantity}- ${item.price}</li>
+                    <li key={index}>{item.name} x{item.quantity} - ${item.price}</li>
                 ))}
             </ul>
             <button onClick={handleCheckout}>Complete Sale</button>

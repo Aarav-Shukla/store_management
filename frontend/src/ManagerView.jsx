@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react';
 
-function ManagerView({ token }) {
+function ManagerView({ token, storeId }) {
     const [products, setProducts] = useState([]);
 
     useEffect(() => {
         async function fetchProducts() {
-            const response = await fetch('http://127.0.0.1:8000/products');
+            const response = await fetch(`http://127.0.0.1:8000/products?store_id=${storeId}`, {
+                headers: { 'authorization': `Bearer ${token}` }
+            });
             const data = await response.json();
             setProducts(data);
         }
         fetchProducts();
-    }, []);
+    }, [storeId]);
 
     return (
         <div>
