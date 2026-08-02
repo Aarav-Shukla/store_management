@@ -320,3 +320,58 @@ async def checkout(data: CheckoutRequest, current_user: dict = Depends(get_curre
                     item.product_id, -item.quantity, 'sale'
                 )
             return {"message": "Checkout successful", "transaction_id": transaction_id, "total": total}
+        
+# ==========================================
+# ANALYTICS ROUTES
+# ==========================================
+
+@app.get("/analytics/summary")
+async def get_analytics_summary(store_id: int, current_user: dict = Depends(get_current_user)):
+    if store_id not in current_user["store_ids"]:
+        raise HTTPException(status_code=403, detail="You do not have access to this store")
+
+    pool = get_pool()
+    async with pool.acquire() as connection:
+        summary = await connection.fetchrow(
+            """
+            SELECT COUNT(*) AS transaction_count, COALESCE(SUM(total), 0) AS total_revenue
+            FROM transactions
+            WHERE store_id = $1 AND created_at >= NOW() - INTERVAL '30 days'
+            """,
+            store_id
+        )
+
+        daily = await connection.fetch(
+            """
+            SELECT DATE(created_at) AS day, SUM(total) AS revenue
+            FROM transactions
+            WHERE store_id = $1 AND created_at >= NOW() - INTERVAL '30 days'
+            GROUP BY DATE(created_at)
+            ORDER BY day
+            """,
+            store_id
+        )
+
+        top_products = await connection.fetch(
+            """
+            SELECT products.name, SUM(transaction_items.quantity) AS total_sold
+            FROM transaction_items
+            JOIN transactions ON transaction_items.transaction_id = transactions.id
+            JOIN products ON transaction_items.product_id = products.id
+            WHERE transactions.store_id = $1 AND transactions.created_at >= NOW() - INTERVAL '30 days'
+            GROUP BY products.name
+            ORDER BY total_sold DESC
+            LIMIT 5
+            """,
+            store_id
+        )
+
+    avg_transaction = (summary["total_revenue"] / summary["transaction_count"]) if summary["transaction_count"] > 0 else 0
+
+    return {
+        "total_revenue": round(float(summary["total_revenue"]), 2),
+        "transaction_count": summary["transaction_count"],
+        "average_transaction": round(float(avg_transaction), 2),
+        "daily_revenue": [{"day": str(row["day"]), "revenue": round(float(row["revenue"]), 2)} for row in daily],
+        "top_products": [{"name": row["name"], "quantity_sold": row["total_sold"]} for row in top_products]
+    }

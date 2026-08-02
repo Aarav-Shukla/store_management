@@ -49,8 +49,11 @@ body {
 }
 
 .page-content {
-    width: 100%;
-    max-width: 900px;
+    width: 95%;
+    max-width: 1600px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
 .login-content {
@@ -60,6 +63,20 @@ body {
 
 .login-content h2 {
     text-align: center;
+}
+
+/* === Dashboard Grid === */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+    gap: 20px;
+    align-items: stretch;
+}
+
+.dashboard-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
 /* === Card === */
@@ -78,7 +95,12 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+}
+
+.card-flex {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .header-controls {
@@ -91,6 +113,34 @@ body {
     display: flex;
     flex-direction: column;
     gap: 12px;
+}
+
+/* === KPIs === */
+.kpi-row {
+    display: flex;
+    gap: 16px;
+}
+
+.kpi {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px;
+    background-color: var(--bg);
+    border-radius: 6px;
+    border: 1px solid var(--border);
+}
+
+.kpi-value {
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.kpi-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 4px;
 }
 
 /* === Buttons === */
@@ -221,4 +271,11 @@ th {
     justify-content: center;
     gap: 12px;
     margin-top: 12px;
+}
+
+/* === Responsive === */
+@media (max-width: 900px) {
+    .kpi-row {
+        flex-direction: column;
+    }
 }
