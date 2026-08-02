@@ -65,6 +65,11 @@ body {
     text-align: center;
 }
 
+.narrow-content {
+    width: 100%;
+    max-width: 900px;
+}
+
 /* === Dashboard Grid === */
 .dashboard-grid {
     display: grid;
@@ -158,6 +163,12 @@ button {
 
 button:hover {
     border-color: var(--accent);
+}
+
+.button-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 .btn-primary {

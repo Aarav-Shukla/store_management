@@ -66,7 +66,7 @@ function EmployeeView({ token, storeId, onLogout, darkMode, setDarkMode, name })
     }
 
     return (
-        <div className="page-content">
+        <div className="narrow-content">
             <div className="card">
                 <div className="card-header">
                     <h2>Welcome, {name}</h2>
@@ -82,14 +82,15 @@ function EmployeeView({ token, storeId, onLogout, darkMode, setDarkMode, name })
                         <button onClick={onLogout}>Log Out</button>
                     </div>
                 </div>
-                <input
-                    value={barcode}
-                    onChange={(e) => setBarcode(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') { handleScan(); } }}
-                />
-                <button onClick={handleScan}>Scan</button>
-                <button onClick={handleCheckAvailability} disabled={!barcode.trim()}>Check Other Stores</button>
-
+                <div className="button-row">
+                    <input
+                        value={barcode}
+                        onChange={(e) => setBarcode(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { handleScan(); } }}
+                    />
+                    <button onClick={handleScan}>Scan</button>
+                    <button onClick={handleCheckAvailability} disabled={!barcode.trim()}>Check Other Stores</button>
+                </div>
                 <ul>
                     {cart.map((item, index) => (
                         <li key={index}>{item.name} x{item.quantity} - ${item.price}</li>

@@ -211,12 +211,14 @@ function ManagerView({ token, storeId, onLogout, darkMode, setDarkMode, onBack, 
                                         <td>${product.price}</td>
                                         <td>{product.quantity_on_hand}</td>
                                         <td>
-                                            <input
-                                                type="number"
-                                                value={restockAmounts[product.id] || ''}
-                                                onChange={(e) => setRestockAmounts({ ...restockAmounts, [product.id]: e.target.value })}
-                                            />
-                                            <button onClick={() => handleRestock(product.id)}>Restock</button>
+                                            <div className="button-row">
+                                                <input
+                                                    type="number"
+                                                    value={restockAmounts[product.id] || ''}
+                                                    onChange={(e) => setRestockAmounts({ ...restockAmounts, [product.id]: e.target.value })}
+                                                />
+                                                <button onClick={() => handleRestock(product.id)}>Restock</button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}

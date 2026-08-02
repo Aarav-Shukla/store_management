@@ -49,11 +49,13 @@ function RegionManagerView({ token, storeIds, onLogout, darkMode, setDarkMode, n
                         <button onClick={onLogout}>Log Out</button>
                     </div>
                 </div>
-                {stores.map((store) => (
-                    <button key={store.id} onClick={() => setSelectedStoreId(store.id)}>
-                        {store.name}
-                    </button>
-                ))}
+                <div className="button-row">
+                    {stores.map((store) => (
+                        <button key={store.id} onClick={() => setSelectedStoreId(store.id)}>
+                            {store.name}
+                        </button>
+                    ))}
+                </div>
             </div>
         </div>
     );

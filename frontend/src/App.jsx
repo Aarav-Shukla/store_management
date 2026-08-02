@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import EmployeeView from './EmployeeView';
 import Login from './Login';
 import ManagerView from './ManagerView';
@@ -12,7 +12,25 @@ function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [name, setName] = useState('');
 
+  useEffect(() => {
+    const storedToken = localStorage.getItem('token');
+    const storedRole = localStorage.getItem('role');
+    const storedStoreIds = localStorage.getItem('storeIds');
+    const storedName = localStorage.getItem('name');
+
+    if (storedToken && storedRole && storedStoreIds) {
+      setToken(storedToken);
+      setRole(storedRole);
+      setStoreIds(JSON.parse(storedStoreIds));
+      setName(storedName || '');
+    }
+  }, []);
+
   function handleLogout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    localStorage.removeItem('storeIds');
+    localStorage.removeItem('name');
     setToken(null);
     setRole(null);
     setStoreIds([]);
@@ -23,6 +41,10 @@ function App() {
 
   if (!token) {
     content = <Login onLoginSuccess={(token, role, storeIds, name) => {
+      localStorage.setItem('token', token);
+      localStorage.setItem('role', role);
+      localStorage.setItem('storeIds', JSON.stringify(storeIds));
+      localStorage.setItem('name', name);
       setToken(token);
       setRole(role);
       setStoreIds(storeIds);
