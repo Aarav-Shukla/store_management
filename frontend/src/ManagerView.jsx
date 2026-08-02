@@ -8,6 +8,8 @@ function ManagerView({ token, storeId, onLogout, darkMode, setDarkMode, onBack, 
     const [expandedItems, setExpandedItems] = useState([]);
     const [page, setPage] = useState(0);
     const pageSize = 5;
+    const [productPage, setProductPage] = useState(0);
+    const productPageSize = 10;
 
     async function fetchProducts() {
         const response = await fetch(`http://127.0.0.1:8000/products?store_id=${storeId}`, {
@@ -30,6 +32,7 @@ function ManagerView({ token, storeId, onLogout, darkMode, setDarkMode, onBack, 
         fetchProducts();
         fetchHistory();
         setPage(0);
+        setProductPage(0);
     }, [storeId]);
 
     async function handleRestock(productId) {
@@ -58,20 +61,35 @@ function ManagerView({ token, storeId, onLogout, darkMode, setDarkMode, onBack, 
         setExpandedId(id);
     }
 
-    const paginatedHistory = history.slice(page * pageSize, (page + 1) * pageSize);
-    const totalPages = Math.ceil(history.length / pageSize);
-
-    function renderPageNumbers() {
+    function renderPageNumbers(currentPage, total, onSelect) {
         const pages = [];
-        for (let i = 0; i < totalPages; i++) {
-            if (i === 0 || i === totalPages - 1 || Math.abs(i - page) <= 1) {
+        for (let i = 0; i < total; i++) {
+            if (i === 0 || i === total - 1 || Math.abs(i - currentPage) <= 1) {
                 pages.push(i);
             } else if (pages[pages.length - 1] !== '...') {
                 pages.push('...');
             }
         }
-        return pages;
+        return pages.map((p, index) =>
+            p === '...' ? (
+                <span key={`ellipsis-${index}`}>...</span>
+            ) : (
+                <button
+                    key={p}
+                    className={p === currentPage ? 'btn-primary' : ''}
+                    onClick={() => onSelect(p)}
+                >
+                    {p + 1}
+                </button>
+            )
+        );
     }
+
+    const paginatedHistory = history.slice(page * pageSize, (page + 1) * pageSize);
+    const totalPages = Math.ceil(history.length / pageSize);
+
+    const paginatedProducts = products.slice(productPage * productPageSize, (productPage + 1) * productPageSize);
+    const totalProductPages = Math.ceil(products.length / productPageSize);
 
     return (
         <div className="page-content">
@@ -102,7 +120,7 @@ function ManagerView({ token, storeId, onLogout, darkMode, setDarkMode, onBack, 
                         </tr>
                     </thead>
                     <tbody>
-                        {products.map((product) => (
+                        {paginatedProducts.map((product) => (
                             <tr key={product.id} style={{ backgroundColor: product.quantity_on_hand < product.reorder_threshold ? 'var(--danger-bg)' : 'transparent' }}>
                                 <td>{product.name}</td>
                                 <td>{product.barcode}</td>
@@ -120,6 +138,11 @@ function ManagerView({ token, storeId, onLogout, darkMode, setDarkMode, onBack, 
                         ))}
                     </tbody>
                 </table>
+                <div className="pagination-controls">
+                    <button onClick={() => setProductPage(productPage - 1)} disabled={productPage === 0}>Previous</button>
+                    {renderPageNumbers(productPage, totalProductPages, setProductPage)}
+                    <button onClick={() => setProductPage(productPage + 1)} disabled={productPage === totalProductPages - 1}>Next</button>
+                </div>
             </div>
 
             <div className="card">
@@ -141,19 +164,7 @@ function ManagerView({ token, storeId, onLogout, darkMode, setDarkMode, onBack, 
                 ))}
                 <div className="pagination-controls">
                     <button onClick={() => setPage(page - 1)} disabled={page === 0}>Previous</button>
-                    {renderPageNumbers().map((p, index) =>
-                        p === '...' ? (
-                            <span key={`ellipsis-${index}`}>...</span>
-                        ) : (
-                            <button
-                                key={p}
-                                className={p === page ? 'btn-primary' : ''}
-                                onClick={() => setPage(p)}
-                            >
-                                {p + 1}
-                            </button>
-                        )
-                    )}
+                    {renderPageNumbers(page, totalPages, setPage)}
                     <button onClick={() => setPage(page + 1)} disabled={page === totalPages - 1}>Next</button>
                 </div>
             </div>
