@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
-function ManagerView({ token, storeId, onLogout, darkMode, setDarkMode, onBack, name }) {
+function ManagerView({ token, storeId, onLogout, darkMode, setDarkMode, onBack, name, stores, onSwitchStore }) {
     const [products, setProducts] = useState([]);
     const [restockAmounts, setRestockAmounts] = useState({});
     const [history, setHistory] = useState([]);
@@ -111,16 +111,25 @@ function ManagerView({ token, storeId, onLogout, darkMode, setDarkMode, onBack, 
                     <div className="header-controls">
                         {onBack && <button onClick={onBack}>← Back</button>}
                         <label className="theme-toggle">
-                            <input
-                                type="checkbox"
-                                checked={darkMode}
-                                onChange={() => setDarkMode(!darkMode)}
-                            />
+                            <input type="checkbox" checked={darkMode} onChange={() => setDarkMode(!darkMode)} />
                             <span className="slider"></span>
                         </label>
                         <button onClick={onLogout}>Log Out</button>
                     </div>
                 </div>
+                {stores && (
+                    <div className="button-row">
+                        {stores.map((store) => (
+                            <button
+                                key={store.id}
+                                className={store.id === storeId ? 'btn-primary' : ''}
+                                onClick={() => onSwitchStore(store.id)}
+                            >
+                                {store.name}
+                            </button>
+                        ))}
+                    </div>
+                )}
             </div>
 
             <div className="dashboard-grid">

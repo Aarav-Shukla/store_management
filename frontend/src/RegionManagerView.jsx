@@ -12,52 +12,26 @@ function RegionManagerView({ token, storeIds, onLogout, darkMode, setDarkMode, n
             });
             const data = await response.json();
             setStores(data);
+            if (data.length > 0 && !selectedStoreId) {
+                setSelectedStoreId(data[0].id);
+            }
         }
         fetchStores();
     }, [token]);
 
-    if (selectedStoreId) {
-        return (
-            <div className="page-content">
-                <ManagerView
-                    token={token}
-                    storeId={selectedStoreId}
-                    onLogout={onLogout}
-                    darkMode={darkMode}
-                    setDarkMode={setDarkMode}
-                    onBack={() => setSelectedStoreId(null)}
-                    name={name}
-                />
-            </div>
-        );
-    }
+    if (!selectedStoreId) return null;
 
     return (
-        <div className="page-content">
-            <div className="card">
-                <div className="card-header">
-                    <h2>Welcome, {name}</h2>
-                    <div className="header-controls">
-                        <label className="theme-toggle">
-                            <input
-                                type="checkbox"
-                                checked={darkMode}
-                                onChange={() => setDarkMode(!darkMode)}
-                            />
-                            <span className="slider"></span>
-                        </label>
-                        <button onClick={onLogout}>Log Out</button>
-                    </div>
-                </div>
-                <div className="button-row">
-                    {stores.map((store) => (
-                        <button key={store.id} onClick={() => setSelectedStoreId(store.id)}>
-                            {store.name}
-                        </button>
-                    ))}
-                </div>
-            </div>
-        </div>
+        <ManagerView
+            token={token}
+            storeId={selectedStoreId}
+            onLogout={onLogout}
+            darkMode={darkMode}
+            setDarkMode={setDarkMode}
+            name={name}
+            stores={stores}
+            onSwitchStore={setSelectedStoreId}
+        />
     );
 }
 
