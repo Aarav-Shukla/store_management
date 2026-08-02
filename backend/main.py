@@ -244,8 +244,41 @@ async def restock_product(id: int, data: RestockRequest, current_user: dict = De
     return {"message": "Restock successful", "product_id": id, "amount_added": data.amount}
 
 # ==========================================
-# TRANSACTION ROUTES
+# TRANSACTION ROUTES (Specific paths first)
 # ==========================================
+
+@app.get("/transactions/history")
+async def get_transaction_history(store_id: int, current_user: dict = Depends(get_current_user)):
+    if store_id not in current_user["store_ids"]:
+        raise HTTPException(status_code=403, detail="You do not have access to this store")
+    pool = get_pool()
+    async with pool.acquire() as connection:
+        rows = await connection.fetch(
+            "SELECT id, total, created_at FROM transactions WHERE store_id = $1 ORDER BY created_at DESC LIMIT 20",
+            store_id
+        )
+    return rows
+
+@app.get("/transactions/{id}/items")
+async def get_transaction_items(id: int, current_user: dict = Depends(get_current_user)):
+    pool = get_pool()
+    async with pool.acquire() as connection:
+        transaction = await connection.fetchrow("SELECT * FROM transactions WHERE id = $1", id)
+        if transaction is None:
+            raise HTTPException(status_code=404, detail="Transaction not found")
+        if transaction["store_id"] not in current_user["store_ids"]:
+            raise HTTPException(status_code=403, detail="You do not have access to this transaction")
+
+        rows = await connection.fetch(
+            """
+            SELECT transaction_items.quantity, transaction_items.price_at_sale, products.name
+            FROM transaction_items
+            JOIN products ON transaction_items.product_id = products.id
+            WHERE transaction_items.transaction_id = $1
+            """,
+            id
+        )
+    return rows
 
 @app.post("/transactions")
 async def checkout(data: CheckoutRequest, current_user: dict = Depends(get_current_user)):

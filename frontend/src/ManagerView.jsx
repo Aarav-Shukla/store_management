@@ -3,6 +3,11 @@ import { useEffect, useState } from 'react';
 function ManagerView({ token, storeId, onLogout, darkMode, setDarkMode, onBack, name }) {
     const [products, setProducts] = useState([]);
     const [restockAmounts, setRestockAmounts] = useState({});
+    const [history, setHistory] = useState([]);
+    const [expandedId, setExpandedId] = useState(null);
+    const [expandedItems, setExpandedItems] = useState([]);
+    const [page, setPage] = useState(0);
+    const pageSize = 5;
 
     async function fetchProducts() {
         const response = await fetch(`http://127.0.0.1:8000/products?store_id=${storeId}`, {
@@ -12,8 +17,19 @@ function ManagerView({ token, storeId, onLogout, darkMode, setDarkMode, onBack, 
         setProducts(data);
     }
 
+    async function fetchHistory() {
+        const response = await fetch(
+            `http://127.0.0.1:8000/transactions/history?store_id=${storeId}`,
+            { headers: { 'authorization': `Bearer ${token}` } }
+        );
+        const data = await response.json();
+        setHistory(data);
+    }
+
     useEffect(() => {
         fetchProducts();
+        fetchHistory();
+        setPage(0);
     }, [storeId]);
 
     async function handleRestock(productId) {
@@ -26,6 +42,35 @@ function ManagerView({ token, storeId, onLogout, darkMode, setDarkMode, onBack, 
         if (response.ok) {
             fetchProducts();
         }
+    }
+
+    async function toggleTransaction(id) {
+        if (expandedId === id) {
+            setExpandedId(null);
+            return;
+        }
+        const response = await fetch(
+            `http://127.0.0.1:8000/transactions/${id}/items`,
+            { headers: { 'authorization': `Bearer ${token}` } }
+        );
+        const data = await response.json();
+        setExpandedItems(data);
+        setExpandedId(id);
+    }
+
+    const paginatedHistory = history.slice(page * pageSize, (page + 1) * pageSize);
+    const totalPages = Math.ceil(history.length / pageSize);
+
+    function renderPageNumbers() {
+        const pages = [];
+        for (let i = 0; i < totalPages; i++) {
+            if (i === 0 || i === totalPages - 1 || Math.abs(i - page) <= 1) {
+                pages.push(i);
+            } else if (pages[pages.length - 1] !== '...') {
+                pages.push('...');
+            }
+        }
+        return pages;
     }
 
     return (
@@ -75,6 +120,42 @@ function ManagerView({ token, storeId, onLogout, darkMode, setDarkMode, onBack, 
                         ))}
                     </tbody>
                 </table>
+            </div>
+
+            <div className="card">
+                <h3>Transaction History</h3>
+                {paginatedHistory.map((tx) => (
+                    <div key={tx.id} className="transaction-row">
+                        <button className="transaction-header" onClick={() => toggleTransaction(tx.id)}>
+                            <span>Transaction {tx.id} — ${tx.total}</span>
+                            <span>{expandedId === tx.id ? 'v' : '^'}</span>
+                        </button>
+                        {expandedId === tx.id && (
+                            <ul>
+                                {expandedItems.map((item, index) => (
+                                    <li key={index}>{item.name} x{item.quantity} - ${item.price_at_sale}</li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
+                ))}
+                <div className="pagination-controls">
+                    <button onClick={() => setPage(page - 1)} disabled={page === 0}>Previous</button>
+                    {renderPageNumbers().map((p, index) =>
+                        p === '...' ? (
+                            <span key={`ellipsis-${index}`}>...</span>
+                        ) : (
+                            <button
+                                key={p}
+                                className={p === page ? 'btn-primary' : ''}
+                                onClick={() => setPage(p)}
+                            >
+                                {p + 1}
+                            </button>
+                        )
+                    )}
+                    <button onClick={() => setPage(page + 1)} disabled={page === totalPages - 1}>Next</button>
+                </div>
             </div>
         </div>
     );

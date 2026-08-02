@@ -200,3 +200,25 @@ th {
 .theme-toggle input:checked + .slider::before {
     transform: translateX(22px);
 }
+
+.transaction-row {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-top: 8px;
+}
+
+.transaction-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: none;
+    border: none;
+}
+
+.pagination-controls {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 12px;
+}
