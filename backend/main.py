@@ -184,7 +184,7 @@ async def check_availability(barcode: str, store_id: int, current_user: dict = D
     return {"product_name": origin_product["name"], "availability": results}
 
 @app.get("/products")
-async def view_products(store_id: Optional[int] = Query(None), current_user: dict = Depends(get_current_user)):
+async def view_products(store_id: Optional[int] = Query(None), search: Optional[str] = Query(None), current_user: dict = Depends(get_current_user)):
     if store_id is None:
         if len(current_user["store_ids"]) == 1:
             store_id = current_user["store_ids"][0]
@@ -194,7 +194,13 @@ async def view_products(store_id: Optional[int] = Query(None), current_user: dic
         raise HTTPException(status_code=403, detail="You do not have access to this store")
     pool = get_pool()
     async with pool.acquire() as connection:
-        rows = await connection.fetch("SELECT * FROM products WHERE store_id = $1", store_id)
+        if search:
+            rows = await connection.fetch(
+                "SELECT * FROM products WHERE store_id = $1 AND (name ILIKE $2 OR sku ILIKE $2)",
+                store_id, f"%{search}%"
+            )
+        else:
+            rows = await connection.fetch("SELECT * FROM products WHERE store_id = $1", store_id)
     return rows
 
 @app.post("/products")
@@ -248,15 +254,21 @@ async def restock_product(id: int, data: RestockRequest, current_user: dict = De
 # ==========================================
 
 @app.get("/transactions/history")
-async def get_transaction_history(store_id: int, current_user: dict = Depends(get_current_user)):
+async def get_transaction_history(store_id: int, search: Optional[str] = Query(None), current_user: dict = Depends(get_current_user)):
     if store_id not in current_user["store_ids"]:
         raise HTTPException(status_code=403, detail="You do not have access to this store")
     pool = get_pool()
     async with pool.acquire() as connection:
-        rows = await connection.fetch(
-            "SELECT id, total, created_at FROM transactions WHERE store_id = $1 ORDER BY created_at DESC LIMIT 20",
-            store_id
-        )
+        if search:
+            rows = await connection.fetch(
+                "SELECT id, total, created_at FROM transactions WHERE store_id = $1 AND id::text = $2 ORDER BY created_at DESC LIMIT 20",
+                store_id, search
+            )
+        else:
+            rows = await connection.fetch(
+                "SELECT id, total, created_at FROM transactions WHERE store_id = $1 ORDER BY created_at DESC LIMIT 20",
+                store_id
+            )
     return rows
 
 @app.get("/transactions/{id}/items")

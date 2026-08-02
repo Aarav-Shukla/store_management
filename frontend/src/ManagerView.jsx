@@ -12,6 +12,8 @@ function ManagerView({ token, storeId, onLogout, darkMode, setDarkMode, onBack, 
     const [productPage, setProductPage] = useState(0);
     const productPageSize = 10;
     const [analytics, setAnalytics] = useState(null);
+    const [productSearch, setProductSearch] = useState('');
+    const [transactionSearch, setTransactionSearch] = useState('');
 
     async function fetchAnalytics() {
         const response = await fetch(
@@ -23,7 +25,7 @@ function ManagerView({ token, storeId, onLogout, darkMode, setDarkMode, onBack, 
     }
 
     async function fetchProducts() {
-        const response = await fetch(`http://127.0.0.1:8000/products?store_id=${storeId}`, {
+        const response = await fetch(`http://127.0.0.1:8000/products?store_id=${storeId}&search=${productSearch}`, {
             headers: { 'authorization': `Bearer ${token}` }
         });
         const data = await response.json();
@@ -31,13 +33,15 @@ function ManagerView({ token, storeId, onLogout, darkMode, setDarkMode, onBack, 
     }
 
     async function fetchHistory() {
-        const response = await fetch(
-            `http://127.0.0.1:8000/transactions/history?store_id=${storeId}`,
-            { headers: { 'authorization': `Bearer ${token}` } }
-        );
+        const response = await fetch(`http://127.0.0.1:8000/transactions/history?store_id=${storeId}&search=${transactionSearch}`, {
+            headers: { 'authorization': `Bearer ${token}` }
+        });
         const data = await response.json();
         setHistory(data);
     }
+
+    useEffect(() => { fetchProducts(); }, [storeId, productSearch]);
+    useEffect(() => { fetchHistory(); }, [storeId, transactionSearch]);
 
     useEffect(() => {
         fetchProducts();
@@ -202,6 +206,10 @@ function ManagerView({ token, storeId, onLogout, darkMode, setDarkMode, onBack, 
 
                 <div className="dashboard-column">
                     <div className="card">
+                        <div className="card-header">
+                            <h3>Inventory</h3>
+                            <input placeholder="Search products by SKU..." value={productSearch} onChange={(e) => setProductSearch(e.target.value)} />
+                        </div>
                         <table>
                             <thead>
                                 <tr>
@@ -241,7 +249,10 @@ function ManagerView({ token, storeId, onLogout, darkMode, setDarkMode, onBack, 
                     </div>
 
                     <div className="card">
-                        <h3>Transaction History</h3>
+                        <div className="card-header">
+                            <h3>Transaction History</h3>
+                            <input placeholder="Search by transaction ID..." value={transactionSearch} onChange={(e) => setTransactionSearch(e.target.value)} />
+                        </div>
                         {paginatedHistory.map((tx) => (
                             <div key={tx.id} className="transaction-row">
                                 <button className="transaction-header" onClick={() => toggleTransaction(tx.id)}>
