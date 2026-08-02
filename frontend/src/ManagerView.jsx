@@ -208,7 +208,7 @@ function ManagerView({ token, storeId, onLogout, darkMode, setDarkMode, onBack, 
                     <div className="card">
                         <div className="card-header">
                             <h3>Inventory</h3>
-                            <input placeholder="Search products by SKU..." value={productSearch} onChange={(e) => setProductSearch(e.target.value)} />
+                            <input placeholder="Search products..." value={productSearch} onChange={(e) => setProductSearch(e.target.value)} />
                         </div>
                         <table>
                             <thead>
