@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import ManagerView from './ManagerView';
+import { API_URL } from './config';
 
 function RegionManagerView({ token, storeIds, onLogout, darkMode, setDarkMode, name }) {
     const [stores, setStores] = useState([]);
@@ -7,7 +8,7 @@ function RegionManagerView({ token, storeIds, onLogout, darkMode, setDarkMode, n
 
     useEffect(() => {
         async function fetchStores() {
-            const response = await fetch('http://127.0.0.1:8000/stores', {
+            const response = await fetch(`${API_URL}/stores`, {
                 headers: { 'authorization': `Bearer ${token}` }
             });
             const data = await response.json();

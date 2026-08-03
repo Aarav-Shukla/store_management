@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { API_URL } from './config';
 
 function EmployeeView({ token, storeId, onLogout, darkMode, setDarkMode, name }) {
     const [barcode, setBarcode] = useState('');
@@ -7,7 +8,7 @@ function EmployeeView({ token, storeId, onLogout, darkMode, setDarkMode, name })
     const [availability, setAvailability] = useState(null);
 
     async function handleScan() {
-        const url = `http://127.0.0.1:8000/products/${storeId}/${barcode}`;
+        const url = `${API_URL}/products/${storeId}/${barcode}`;
         const response = await fetch(url, {
             headers: { 'authorization': `Bearer ${token}` }
         });
@@ -38,7 +39,7 @@ function EmployeeView({ token, storeId, onLogout, darkMode, setDarkMode, name })
 
     async function handleCheckout() {
         const items = cart.map((item) => ({ product_id: item.id, quantity: item.quantity }));
-        const response = await fetch('http://127.0.0.1:8000/transactions', {
+        const response = await fetch(`${API_URL}/transactions`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'authorization': `Bearer ${token}` },
             body: JSON.stringify({ items: items })
@@ -58,7 +59,7 @@ function EmployeeView({ token, storeId, onLogout, darkMode, setDarkMode, name })
 
     async function handleCheckAvailability() {
         const response = await fetch(
-            `http://127.0.0.1:8000/products/availability/${barcode}?store_id=${storeId}`,
+            `${API_URL}/products/availability/${barcode}?store_id=${storeId}`,
             { headers: { 'authorization': `Bearer ${token}` } }
         );
         const data = await response.json();

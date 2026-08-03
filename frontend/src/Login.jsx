@@ -1,11 +1,12 @@
 import { useState } from 'react';
+import { API_URL } from './config';
 
 function Login({ onLoginSuccess }) {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
 
     async function handleLogin() {
-        const response = await fetch('http://127.0.0.1:8000/auth/login', {
+        const response = await fetch(`${API_URL}/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username: username, password: password })

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { API_URL } from './config';
 
 function ManagerView({ token, storeId, onLogout, darkMode, setDarkMode, onBack, name, stores, onSwitchStore }) {
     const [products, setProducts] = useState([]);
@@ -17,7 +18,7 @@ function ManagerView({ token, storeId, onLogout, darkMode, setDarkMode, onBack, 
 
     async function fetchAnalytics() {
         const response = await fetch(
-            `http://127.0.0.1:8000/analytics/summary?store_id=${storeId}`,
+            `${API_URL}/analytics/summary?store_id=${storeId}`,
             { headers: { 'authorization': `Bearer ${token}` } }
         );
         const data = await response.json();
@@ -25,7 +26,7 @@ function ManagerView({ token, storeId, onLogout, darkMode, setDarkMode, onBack, 
     }
 
     async function fetchProducts() {
-        const response = await fetch(`http://127.0.0.1:8000/products?store_id=${storeId}&search=${productSearch}`, {
+        const response = await fetch(`${API_URL}/products?store_id=${storeId}&search=${productSearch}`, {
             headers: { 'authorization': `Bearer ${token}` }
         });
         const data = await response.json();
@@ -33,7 +34,7 @@ function ManagerView({ token, storeId, onLogout, darkMode, setDarkMode, onBack, 
     }
 
     async function fetchHistory() {
-        const response = await fetch(`http://127.0.0.1:8000/transactions/history?store_id=${storeId}&search=${transactionSearch}`, {
+        const response = await fetch(`${API_URL}/transactions/history?store_id=${storeId}&search=${transactionSearch}`, {
             headers: { 'authorization': `Bearer ${token}` }
         });
         const data = await response.json();
@@ -53,7 +54,7 @@ function ManagerView({ token, storeId, onLogout, darkMode, setDarkMode, onBack, 
 
     async function handleRestock(productId) {
         const amount = parseInt(restockAmounts[productId] || 0);
-        const response = await fetch(`http://127.0.0.1:8000/products/${productId}/restock`, {
+        const response = await fetch(`${API_URL}/products/${productId}/restock`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'authorization': `Bearer ${token}` },
             body: JSON.stringify({ amount: amount })
@@ -69,7 +70,7 @@ function ManagerView({ token, storeId, onLogout, darkMode, setDarkMode, onBack, 
             return;
         }
         const response = await fetch(
-            `http://127.0.0.1:8000/transactions/${id}/items`,
+            `${API_URL}/transactions/${id}/items`,
             { headers: { 'authorization': `Bearer ${token}` } }
         );
         const data = await response.json();
