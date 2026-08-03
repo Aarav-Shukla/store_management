@@ -65,7 +65,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
-        "https://store-management-f1775amzu-aarav-shukla1.vercel.app"
+        "https://store-management-beta-beryl.vercel.app"
     ],
     allow_credentials=True,
     allow_methods=["*"],
