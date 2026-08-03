@@ -2,7 +2,7 @@
 
 A full-stack, multi-store inventory and point-of-sale system with role-based access control, built to demonstrate backend data modeling, concurrency-safe transactions, and full-stack application design.
 
-**Live Demo:** https://store-management-f1775amzu-aarav-shukla1.vercel.app
+**Live Demo:** [store-management-beta-beryl.vercel.app](https://store-management-beta-beryl.vercel.app)
 
 > Note: the backend runs on Render's free tier, which spins down after periods of inactivity. The first request after idle time may take 30–60 seconds to respond while the server wakes up.
 

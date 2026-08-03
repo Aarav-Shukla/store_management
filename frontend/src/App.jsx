@@ -26,6 +26,14 @@ function App() {
     }
   }, []);
 
+  useEffect(() => {
+    if (!token) {
+      document.title = 'Store Management - Login';
+    } else {
+      document.title = 'Store Management - Dashboard';
+    }
+  }, [token]);
+
   function handleLogout() {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
