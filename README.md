@@ -21,6 +21,18 @@ This application simulates a retail chain's internal management software, suppor
 - **Database:** PostgreSQL — hosted on Supabase
 - **Auth:** JWT-based authentication, bcrypt password hashing
 
+## Architecture
+
+```text
+React (Vite)
+      │
+      ▼
+FastAPI Backend
+      │
+      ▼
+PostgreSQL (Supabase)
+```
+
 ## Key Features
 
 ### Concurrency-Safe Checkout
@@ -117,6 +129,10 @@ store_management/
 │       ├── ManagerView.jsx
 │       └── RegionManagerView.jsx
 ```
+
+## Development Workflow
+
+Although this was a solo project, development followed a structured software engineering workflow. Work was organized using a [GitHub Projects Kanban board](https://github.com/users/Aarav-Shukla/projects/2), with individual features, enhancements, and bug fixes tracked as [GitHub Issues](https://github.com/Aarav-Shukla/store_management/issues). Each issue was tied to the commits that resolved it, providing a documented development history from planning through implementation.
 
 ## Future Enhancements
 
